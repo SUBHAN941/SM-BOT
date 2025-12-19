@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://sm-bot-backend.vercel.app/";
+const API_BASE_URL = "https://sm-bot-backend.vercel.app/api";
 
 class ApiService {
   constructor() {
