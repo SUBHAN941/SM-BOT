@@ -1,19 +1,22 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaPaperPlane, FaSpinner, FaImage } from "react-icons/fa";
+import { HiSparkles } from "react-icons/hi2";
 import { useChatContext } from "../../context/ChatContext";
 
 export const ChatInput = () => {
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState("chat"); // chat or image
+  const [mode, setMode] = useState("chat");
+  const [isFocused, setIsFocused] = useState(false);
 
   const { sendMessage, isLoading, selectedModel, refreshConversations } = useChatContext();
   const textareaRef = useRef(null);
 
-  // Auto-resize textarea
+  // Auto-resize textarea (with max limit)
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + "px";
+      textareaRef.current.style.height = "24px";
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = Math.min(scrollHeight, 120) + "px";
     }
   }, [input]);
 
@@ -23,7 +26,6 @@ export const ChatInput = () => {
 
     let messageText = input.trim();
 
-    // Add /image prefix if in image mode
     if (mode === "image" && !messageText.toLowerCase().startsWith("/image")) {
       messageText = "/image " + messageText;
     }
@@ -42,85 +44,108 @@ export const ChatInput = () => {
   };
 
   return (
-    <div className="border-t border-gray-700 p-4 bg-gray-900">
+    <div className="p-3 md:p-4">
       <div className="max-w-4xl mx-auto">
-        {/* Mode Buttons */}
-        <div className="flex items-center gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => setMode("chat")}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              mode === "chat"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
-            }`}
-          >
-            💬 Chat
-          </button>
+        {/* Compact Mode Toggle + Input in one row on mobile */}
+        <div className="flex flex-col gap-3">
+          
+          {/* Mode Toggle - Compact */}
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center p-0.5 rounded-lg bg-gray-800/80 border border-gray-700/50">
+              <button
+                type="button"
+                onClick={() => setMode("chat")}
+                className={`relative px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  mode === "chat" ? "text-white" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                {mode === "chat" && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 rounded-md" />
+                )}
+                <span className="relative flex items-center gap-1.5">
+                  <HiSparkles className="w-3 h-3" />
+                  Chat
+                </span>
+              </button>
 
-          <button
-            type="button"
-            onClick={() => setMode("image")}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-              mode === "image"
-                ? "bg-purple-600 text-white"
-                : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white"
-            }`}
-          >
-            <FaImage className="w-3 h-3" />
-            Generate Image
-          </button>
-        </div>
+              <button
+                type="button"
+                onClick={() => setMode("image")}
+                className={`relative px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 flex items-center gap-1.5 ${
+                  mode === "image" ? "text-white" : "text-gray-400 hover:text-white"
+                }`}
+              >
+                {mode === "image" && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 rounded-md" />
+                )}
+                <span className="relative flex items-center gap-1.5">
+                  <FaImage className="w-3 h-3" />
+                  Image
+                </span>
+              </button>
+            </div>
 
-        {/* Input Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
+            {/* Helper text - only show on larger screens */}
+            <p className="hidden md:flex items-center gap-2 text-xs text-gray-500">
+              <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-gray-400 text-[10px]">Enter</kbd>
+              <span>send</span>
+              <kbd className="px-1.5 py-0.5 bg-gray-800 rounded text-gray-400 text-[10px]">Shift+Enter</kbd>
+              <span>new line</span>
+            </p>
+          </div>
+
+          {/* Input Form - Compact */}
+          <form onSubmit={handleSubmit}>
+            <div
+              className={`relative flex items-end gap-2 p-2 rounded-xl border transition-all duration-200 ${
+                isFocused
+                  ? mode === "image"
+                    ? "bg-gray-800/90 border-purple-500/50 shadow-lg shadow-purple-500/10"
+                    : "bg-gray-800/90 border-blue-500/50 shadow-lg shadow-blue-500/10"
+                  : "bg-gray-800/60 border-gray-700/50"
+              }`}
+            >
+              {/* Textarea */}
               <textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
                 disabled={isLoading}
                 rows={1}
                 placeholder={
                   mode === "image"
                     ? "Describe the image you want to generate..."
-                    : "Type a message..."
+                    : "Type your message..."
                 }
-                className={`w-full bg-gray-800 text-white placeholder-gray-500 rounded-xl px-4 py-3 resize-none focus:outline-none focus:ring-2 transition-all min-h-[48px] max-h-[200px] ${
-                  mode === "image"
-                    ? "border-2 border-purple-500 focus:ring-purple-500"
-                    : "border border-gray-700 focus:ring-blue-500"
-                }`}
+                className="flex-1 bg-transparent text-white text-sm placeholder-gray-500 resize-none focus:outline-none min-h-[24px] max-h-[120px] py-1.5 px-2 leading-normal"
               />
+
+              {/* Submit Button - Compact */}
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className={`flex-shrink-0 p-2.5 rounded-lg transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+                  input.trim() && !isLoading
+                    ? mode === "image"
+                      ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 shadow-lg shadow-purple-500/25"
+                      : "bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg shadow-blue-500/25"
+                    : "bg-gray-700"
+                }`}
+              >
+                {isLoading ? (
+                  <FaSpinner className="w-4 h-4 text-white animate-spin" />
+                ) : mode === "image" ? (
+                  <FaImage className="w-4 h-4 text-white" />
+                ) : (
+                  <FaPaperPlane className="w-4 h-4 text-white" />
+                )}
+              </button>
             </div>
-
-            <button
-              type="submit"
-              disabled={!input.trim() || isLoading}
-              className={`p-3 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
-                mode === "image"
-                  ? "bg-purple-600 hover:bg-purple-700"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
-              {isLoading ? (
-                <FaSpinner className="w-5 h-5 text-white animate-spin" />
-              ) : mode === "image" ? (
-                <FaImage className="w-5 h-5 text-white" />
-              ) : (
-                <FaPaperPlane className="w-5 h-5 text-white" />
-              )}
-            </button>
-          </div>
-
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            {mode === "image"
-              ? "🎨 Describe what you want to generate"
-              : "Press Enter to send, Shift+Enter for new line"}
-          </p>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );
