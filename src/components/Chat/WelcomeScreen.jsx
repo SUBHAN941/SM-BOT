@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo } from "react";
 import { 
   FaRobot, 
   FaCode, 
@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi2";
 import { motion } from "framer-motion";
+import { useChatContext } from "../../context/ChatContext";
 
 const suggestions = [
   {
@@ -19,7 +20,6 @@ const suggestions = [
     description: "Generate clean, efficient code",
     prompt: "Write a Python function to sort a list using quicksort algorithm",
     gradient: "from-blue-500 to-cyan-500",
-    bgGlow: "bg-blue-500/20",
   },
   {
     icon: FaLightbulb,
@@ -27,7 +27,6 @@ const suggestions = [
     description: "Get creative suggestions",
     prompt: "Give me 5 creative startup ideas for 2024",
     gradient: "from-yellow-500 to-orange-500",
-    bgGlow: "bg-yellow-500/20",
   },
   {
     icon: FaBook,
@@ -35,7 +34,6 @@ const suggestions = [
     description: "Learn anything easily",
     prompt: "Explain quantum computing in simple terms",
     gradient: "from-purple-500 to-pink-500",
-    bgGlow: "bg-purple-500/20",
   },
   {
     icon: FaImage,
@@ -43,7 +41,6 @@ const suggestions = [
     description: "Create stunning visuals",
     prompt: "/image A futuristic city with flying cars at sunset, cyberpunk style",
     gradient: "from-green-500 to-emerald-500",
-    bgGlow: "bg-green-500/20",
   },
   {
     icon: FaPen,
@@ -51,7 +48,6 @@ const suggestions = [
     description: "Craft compelling text",
     prompt: "Write a professional email requesting a meeting with a potential client",
     gradient: "from-pink-500 to-rose-500",
-    bgGlow: "bg-pink-500/20",
   },
   {
     icon: FaChartLine,
@@ -59,63 +55,29 @@ const suggestions = [
     description: "Get insights & analysis",
     prompt: "What are the key metrics I should track for a SaaS business?",
     gradient: "from-indigo-500 to-purple-500",
-    bgGlow: "bg-indigo-500/20",
   },
-];
-
-const models = [
-  { name: "GPT-4", color: "from-green-400 to-emerald-500" },
-  { name: "Claude", color: "from-orange-400 to-amber-500" },
-  { name: "Llama", color: "from-blue-400 to-indigo-500" },
-  { name: "Mixtral", color: "from-purple-400 to-pink-500" },
-  { name: "Gemini", color: "from-cyan-400 to-blue-500" },
 ];
 
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
   },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" }
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-export const WelcomeScreen = ({ onSelectPrompt }) => {
+export const WelcomeScreen = memo(({ onSelectPrompt }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
+  const { darkMode, models } = useChatContext();
 
   return (
-    // FIXED: Changed from flex items-center justify-center to block with padding
-    // This allows the content to scroll properly
     <div className="min-h-full w-full px-4 py-8 md:px-6 md:py-12">
-      
-      {/* Center container with max-width */}
       <div className="max-w-4xl mx-auto">
-        
-        {/* Background decorations - now properly positioned */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-          <motion.div
-            animate={{ x: [0, 30, 0], y: [0, -20, 0] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-20 left-1/4 w-72 h-72 bg-purple-600/20 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ x: [0, -20, 0], y: [0, 30, 0] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute bottom-20 right-1/4 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl"
-          />
-        </div>
-
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -127,29 +89,36 @@ export const WelcomeScreen = ({ onSelectPrompt }) => {
             variants={itemVariants}
             className="relative w-20 h-20 md:w-24 md:h-24 mx-auto mb-6 md:mb-8"
           >
-            {/* Outer glow ring */}
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 blur-xl opacity-50"
             />
             
-            {/* Spinning border */}
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
               className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-75"
             />
             
-            {/* Main logo container */}
-            <div className="relative w-full h-full bg-gray-900 rounded-3xl flex items-center justify-center shadow-2xl">
-              <div className="absolute inset-1 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl" />
+            <div 
+              className="relative w-full h-full rounded-3xl flex items-center justify-center shadow-2xl"
+              style={{ backgroundColor: 'var(--bg-secondary)' }}
+            >
+              <div 
+                className="absolute inset-1 rounded-2xl"
+                style={{ 
+                  background: darkMode 
+                    ? 'linear-gradient(to bottom right, #1f2937, #111827)' 
+                    : 'linear-gradient(to bottom right, #f9fafb, #f3f4f6)'
+                }}
+              />
               <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                transition={{ duration: 2, repeat: Infinity }}
                 className="relative"
               >
-                <FaRobot className="w-8 h-8 md:w-10 md:h-10 text-white" />
+                <FaRobot className="w-8 h-8 md:w-10 md:h-10 text-purple-500" />
               </motion.div>
             </div>
           </motion.div>
@@ -157,7 +126,7 @@ export const WelcomeScreen = ({ onSelectPrompt }) => {
           {/* Title */}
           <motion.div variants={itemVariants} className="mb-4">
             <h1 className="text-3xl md:text-5xl font-bold mb-2">
-              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                 Welcome to AI Chat
               </span>
             </h1>
@@ -172,13 +141,14 @@ export const WelcomeScreen = ({ onSelectPrompt }) => {
           {/* Subtitle */}
           <motion.p
             variants={itemVariants}
-            className="text-gray-400 mb-8 md:mb-10 text-base md:text-xl max-w-lg mx-auto"
+            className="mb-8 md:mb-10 text-base md:text-xl max-w-lg mx-auto"
+            style={{ color: 'var(--text-tertiary)' }}
           >
             Your intelligent assistant powered by{" "}
-            <span className="text-purple-400 font-medium">multiple AI models</span>
+            <span className="text-purple-500 font-medium">multiple AI models</span>
           </motion.p>
 
-          {/* Suggestion Cards Grid */}
+          {/* Suggestion Cards */}
           <motion.div
             variants={itemVariants}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-8 md:mb-10"
@@ -192,101 +162,115 @@ export const WelcomeScreen = ({ onSelectPrompt }) => {
                 onMouseEnter={() => setHoveredCard(index)}
                 onMouseLeave={() => setHoveredCard(null)}
                 onClick={() => onSelectPrompt(suggestion.prompt)}
-                className="group relative p-4 md:p-5 rounded-2xl text-left transition-all duration-300 overflow-hidden"
+                className="group relative p-4 md:p-5 rounded-2xl text-left transition-all duration-300 overflow-hidden border"
+                style={{
+                  backgroundColor: 'var(--bg-card)',
+                  borderColor: hoveredCard === index 
+                    ? 'var(--accent-primary)' 
+                    : 'var(--border-primary)',
+                }}
               >
-                {/* Card background */}
-                <div className="absolute inset-0 bg-gray-800/80 backdrop-blur-sm border border-gray-700/50 rounded-2xl transition-all duration-300 group-hover:border-gray-600/50" />
-                
-                {/* Hover glow effect */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: hoveredCard === index ? 1 : 0 }}
-                  className={`absolute inset-0 ${suggestion.bgGlow} blur-xl transition-opacity duration-300`}
-                />
-                
-                {/* Gradient border on hover */}
-                <div 
-                  className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${suggestion.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
-                  style={{ padding: "1px" }}
-                >
-                  <div className="absolute inset-[1px] bg-gray-800/95 rounded-2xl" />
-                </div>
+                {/* Hover glow */}
+                {hoveredCard === index && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="absolute inset-0 blur-xl"
+                    style={{
+                      background: `linear-gradient(135deg, ${
+                        suggestion.gradient.includes('blue') ? 'rgba(59, 130, 246, 0.1)' :
+                        suggestion.gradient.includes('purple') ? 'rgba(139, 92, 246, 0.1)' :
+                        suggestion.gradient.includes('pink') ? 'rgba(236, 72, 153, 0.1)' :
+                        suggestion.gradient.includes('yellow') ? 'rgba(234, 179, 8, 0.1)' :
+                        suggestion.gradient.includes('green') ? 'rgba(34, 197, 94, 0.1)' :
+                        'rgba(99, 102, 241, 0.1)'
+                      }, transparent)`,
+                    }}
+                  />
+                )}
 
                 {/* Content */}
                 <div className="relative z-10">
-                  {/* Icon */}
                   <div className={`w-10 h-10 md:w-12 md:h-12 mb-3 md:mb-4 rounded-xl bg-gradient-to-br ${suggestion.gradient} p-0.5 shadow-lg`}>
-                    <div className="w-full h-full bg-gray-800 rounded-[10px] flex items-center justify-center group-hover:bg-gray-700/50 transition-colors">
-                      <suggestion.icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
+                    <div 
+                      className="w-full h-full rounded-[10px] flex items-center justify-center transition-colors"
+                      style={{ backgroundColor: 'var(--bg-secondary)' }}
+                    >
+                      <suggestion.icon className="w-4 h-4 md:w-5 md:h-5" style={{ color: 'var(--text-primary)' }} />
                     </div>
                   </div>
 
-                  {/* Text */}
-                  <h3 className="font-semibold text-white text-sm md:text-base mb-1 flex items-center gap-2">
+                  <h3 
+                    className="font-semibold text-sm md:text-base mb-1 flex items-center gap-2"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
                     {suggestion.title}
-                    <motion.span
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ 
-                        opacity: hoveredCard === index ? 1 : 0, 
-                        x: hoveredCard === index ? 0 : -10 
-                      }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <FaArrowRight className="w-3 h-3 text-gray-400" />
-                    </motion.span>
+                    {hoveredCard === index && (
+                      <motion.span
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                      >
+                        <FaArrowRight className="w-3 h-3" style={{ color: 'var(--text-tertiary)' }} />
+                      </motion.span>
+                    )}
                   </h3>
-                  <p className="text-xs md:text-sm text-gray-400 mb-2 md:mb-3">
+                  <p 
+                    className="text-xs md:text-sm mb-2 md:mb-3"
+                    style={{ color: 'var(--text-tertiary)' }}
+                  >
                     {suggestion.description}
                   </p>
                   
-                  {/* Prompt preview */}
-                  <p className="text-xs text-gray-500 line-clamp-2 italic">
+                  <p 
+                    className="text-xs line-clamp-2 italic"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
                     "{suggestion.prompt}"
                   </p>
                 </div>
-
-                {/* Shimmer effect on hover */}
-                <motion.div
-                  initial={{ x: "-100%" }}
-                  animate={{ x: hoveredCard === index ? "100%" : "-100%" }}
-                  transition={{ duration: 0.6, ease: "easeInOut" }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"
-                />
               </motion.button>
             ))}
           </motion.div>
 
           {/* Models Section */}
-          <motion.div variants={itemVariants} className="relative">
-            {/* Section header */}
+          <motion.div variants={itemVariants}>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-gray-700" />
-              <span className="text-xs md:text-sm text-gray-500 font-medium uppercase tracking-wider">
+              <div 
+                className="h-px w-12" 
+                style={{ background: 'linear-gradient(to right, transparent, var(--border-primary))' }}
+              />
+              <span 
+                className="text-xs md:text-sm font-medium uppercase tracking-wider"
+                style={{ color: 'var(--text-muted)' }}
+              >
                 Powered by
               </span>
-              <div className="h-px w-12 bg-gradient-to-l from-transparent to-gray-700" />
+              <div 
+                className="h-px w-12" 
+                style={{ background: 'linear-gradient(to left, transparent, var(--border-primary))' }}
+              />
             </div>
 
-            {/* Model pills */}
             <div className="flex flex-wrap justify-center gap-2 md:gap-3">
-              {models.map((model, index) => (
+              {(models || []).slice(0, 5).map((model, index) => (
                 <motion.div
-                  key={model.name}
+                  key={model.key}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.7 + index * 0.1 }}
                   whileHover={{ scale: 1.05, y: -2 }}
-                  className="group relative cursor-default"
+                  className="px-3 py-1.5 md:px-4 md:py-2 rounded-full border backdrop-blur-sm transition-all duration-300"
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
+                    borderColor: 'var(--border-primary)',
+                  }}
                 >
-                  {/* Glow on hover */}
-                  <div className={`absolute inset-0 bg-gradient-to-r ${model.color} rounded-full blur-md opacity-0 group-hover:opacity-40 transition-opacity duration-300`} />
-                  
-                  {/* Pill */}
-                  <div className="relative px-3 py-1.5 md:px-4 md:py-2 bg-gray-800/80 backdrop-blur-sm rounded-full border border-gray-700/50 group-hover:border-gray-600 transition-all duration-300">
-                    <span className={`text-xs md:text-sm font-medium bg-gradient-to-r ${model.color} bg-clip-text text-transparent`}>
-                      {model.name}
-                    </span>
-                  </div>
+                  <span 
+                    className="text-xs md:text-sm font-medium"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    {model.name}
+                  </span>
                 </motion.div>
               ))}
             </div>
@@ -297,12 +281,21 @@ export const WelcomeScreen = ({ onSelectPrompt }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2 }}
-            className="mt-8 md:mt-10 text-center pb-4"
+            className="mt-8 md:mt-10 pb-4"
           >
-            <p className="text-xs text-gray-600 flex items-center justify-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-800/50 border border-gray-700/50">
-                <HiSparkles className="w-3 h-3 text-purple-400" />
-                <span className="text-gray-400">Pro tip</span>
+            <p 
+              className="text-xs flex items-center justify-center gap-2 flex-wrap"
+              style={{ color: 'var(--text-muted)' }}
+            >
+              <span 
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-md border"
+                style={{
+                  backgroundColor: 'var(--bg-tertiary)',
+                  borderColor: 'var(--border-primary)',
+                }}
+              >
+                <HiSparkles className="w-3 h-3 text-purple-500" />
+                <span style={{ color: 'var(--text-tertiary)' }}>Pro tip</span>
               </span>
               <span>Click any card above or start typing to begin</span>
             </p>
@@ -311,4 +304,8 @@ export const WelcomeScreen = ({ onSelectPrompt }) => {
       </div>
     </div>
   );
-};
+});
+
+WelcomeScreen.displayName = 'WelcomeScreen';
+
+export default WelcomeScreen;
