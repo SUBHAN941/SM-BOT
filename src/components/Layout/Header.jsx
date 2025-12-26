@@ -1,12 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, memo, useCallback } from "react";
 import { 
   FaBars, 
   FaRobot, 
   FaTimes, 
   FaCog, 
-  FaBell,
-  FaKeyboard,
-  FaQuestionCircle
+  FaKeyboard
 } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi2";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,18 +12,42 @@ import { useChatContext } from "../../context/ChatContext";
 import { ModelSelector } from "../common/ModelSelector";
 import { ThemeToggleMini } from "../common/ThemeToggle";
 
-export const Header = () => {
-  const { sidebarOpen, setSidebarOpen, isLoading } = useChatContext();
+export const Header = memo(() => {
+  const { 
+    sidebarOpen, 
+    setSidebarOpen, 
+    isLoading,
+    setSettingsOpen,
+    darkMode
+  } = useChatContext();
+  
   const [showShortcuts, setShowShortcuts] = useState(false);
+
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen((prev) => !prev);
+  }, [setSidebarOpen]);
+
+  const openSettings = useCallback(() => {
+    setSettingsOpen(true);
+  }, [setSettingsOpen]);
 
   return (
     <>
-      <header className="relative h-14 flex-shrink-0 z-40">
-        {/* Background with blur */}
-        <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-xl border-b border-gray-800/50" />
-        
+      <header 
+        className="relative h-14 flex-shrink-0 z-40 border-b backdrop-blur-xl transition-colors duration-300"
+        style={{
+          backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+          borderColor: 'var(--border-primary)',
+        }}
+      >
         {/* Gradient accent line */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
+        <div 
+          className="absolute bottom-0 left-0 right-0 h-px"
+          style={{
+            background: 'linear-gradient(to right, transparent, var(--accent-primary), transparent)',
+            opacity: 0.5,
+          }}
+        />
 
         {/* Content */}
         <div className="relative h-full flex items-center justify-between px-4">
@@ -35,15 +57,15 @@ export const Header = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`
-                relative p-2 rounded-xl transition-all duration-200
-                ${sidebarOpen 
-                  ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30" 
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 hover:text-white"
-                }
-              `}
-              title={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+              onClick={toggleSidebar}
+              className={`p-2 rounded-xl transition-all duration-200 ${
+                sidebarOpen ? "bg-purple-500/20 text-purple-500" : ""
+              }`}
+              style={{
+                backgroundColor: sidebarOpen ? undefined : 'var(--bg-tertiary)',
+                color: sidebarOpen ? undefined : 'var(--text-tertiary)',
+              }}
+              aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
             >
               <AnimatePresence mode="wait">
                 {sidebarOpen ? (
@@ -52,7 +74,6 @@ export const Header = () => {
                     initial={{ rotate: -90, opacity: 0 }}
                     animate={{ rotate: 0, opacity: 1 }}
                     exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
                   >
                     <FaTimes className="w-5 h-5" />
                   </motion.div>
@@ -62,7 +83,6 @@ export const Header = () => {
                     initial={{ rotate: 90, opacity: 0 }}
                     animate={{ rotate: 0, opacity: 1 }}
                     exit={{ rotate: -90, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
                   >
                     <FaBars className="w-5 h-5" />
                   </motion.div>
@@ -71,87 +91,97 @@ export const Header = () => {
             </motion.button>
 
             {/* Divider */}
-            <div className="w-px h-6 bg-gray-700/50 hidden sm:block" />
+            <div 
+              className="w-px h-6 hidden sm:block"
+              style={{ backgroundColor: 'var(--border-primary)' }}
+            />
 
             {/* Logo */}
-            <motion.div 
-              className="flex items-center gap-2.5"
-              whileHover={{ scale: 1.02 }}
-            >
-              {/* Animated Logo */}
+            <div className="flex items-center gap-2.5">
               <div className="relative">
-                {/* Glow effect */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl blur-md opacity-50" />
-                
-                {/* Logo container */}
-                <motion.div
-                  animate={{ rotate: [0, 5, -5, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="relative w-9 h-9 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg"
-                >
-                  <FaRobot className="w-4.5 h-4.5 text-white" />
-                  
-                  {/* Sparkle decoration */}
-                  <motion.div
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute -top-1 -right-1"
-                  >
-                    <HiSparkles className="w-3 h-3 text-yellow-300" />
-                  </motion.div>
-                </motion.div>
+                <div className="relative w-9 h-9 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <FaRobot className="w-4 h-4 text-white" />
+                  <HiSparkles className="absolute -top-1 -right-1 w-3 h-3 text-yellow-300" />
+                </div>
               </div>
 
-              {/* Brand name */}
               <div className="hidden sm:block">
-                <h1 className="font-bold text-lg bg-gradient-to-r from-white via-purple-200 to-white bg-clip-text text-transparent">
+                <h1 className="font-bold text-lg bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                   AI Chat
                 </h1>
                 <div className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Online</span>
+                  <span 
+                    className="text-[10px] uppercase tracking-wider"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    Online
+                  </span>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
 
-          {/* Center - Status indicator (visible when loading) */}
+          {/* Center - Loading indicator */}
           <AnimatePresence>
             {isLoading && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 rounded-full border border-purple-500/30"
+                className="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 rounded-full border border-purple-500/30"
               >
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full"
+                  className="w-3 h-3 border-2 border-purple-500 border-t-transparent rounded-full"
                 />
-                <span className="text-xs text-purple-300 font-medium">Processing...</span>
+                <span className="text-xs text-purple-500 font-medium">Processing...</span>
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* Right Side */}
           <div className="flex items-center gap-2">
-            {/* Keyboard shortcuts button */}
+            {/* Keyboard shortcuts */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowShortcuts(true)}
-              className="hidden md:flex p-2 rounded-xl bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 hover:text-white transition-all duration-200"
-              title="Keyboard shortcuts"
+              className="hidden md:flex p-2 rounded-xl transition-all"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+              aria-label="Keyboard shortcuts"
             >
               <FaKeyboard className="w-4 h-4" />
+            </motion.button>
+
+            {/* Settings Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={openSettings}
+              className="p-2 rounded-xl transition-all"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+              aria-label="Open settings"
+            >
+              <FaCog className="w-4 h-4" />
             </motion.button>
 
             {/* Theme toggle */}
             <ThemeToggleMini />
 
             {/* Divider */}
-            <div className="w-px h-6 bg-gray-700/50" />
+            <div 
+              className="w-px h-6"
+              style={{ backgroundColor: 'var(--border-primary)' }}
+            />
 
             {/* Model Selector */}
             <ModelSelector />
@@ -159,24 +189,25 @@ export const Header = () => {
         </div>
       </header>
 
-      {/* Keyboard Shortcuts Modal */}
+      {/* Shortcuts Modal */}
       <AnimatePresence>
         {showShortcuts && (
-          <ShortcutsModal onClose={() => setShowShortcuts(false)} />
+          <ShortcutsModal onClose={() => setShowShortcuts(false)} darkMode={darkMode} />
         )}
       </AnimatePresence>
     </>
   );
-};
+});
 
-// Keyboard Shortcuts Modal Component
-const ShortcutsModal = ({ onClose }) => {
+// Shortcuts Modal Component
+const ShortcutsModal = memo(({ onClose, darkMode }) => {
   const shortcuts = [
     { keys: ["Enter"], description: "Send message" },
     { keys: ["Shift", "Enter"], description: "New line" },
     { keys: ["Ctrl", "N"], description: "New conversation" },
     { keys: ["Ctrl", "B"], description: "Toggle sidebar" },
     { keys: ["Ctrl", "/"], description: "Focus input" },
+    { keys: ["Ctrl", ","], description: "Open settings" },
     { keys: ["Esc"], description: "Close modal" },
   ];
 
@@ -185,7 +216,8 @@ const ShortcutsModal = ({ onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
       onClick={onClose}
     >
       <motion.div
@@ -193,58 +225,99 @@ const ShortcutsModal = ({ onClose }) => {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-gray-800/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl overflow-hidden"
+        className="w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden"
+        style={{
+          backgroundColor: 'var(--bg-card)',
+          borderColor: 'var(--border-primary)',
+        }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
+        <div 
+          className="flex items-center justify-between p-4 border-b"
+          style={{ borderColor: 'var(--border-primary)' }}
+        >
           <div className="flex items-center gap-2">
-            <FaKeyboard className="w-5 h-5 text-purple-400" />
-            <h2 className="text-lg font-semibold text-white">Keyboard Shortcuts</h2>
+            <FaKeyboard className="w-5 h-5 text-purple-500" />
+            <h2 
+              className="text-lg font-semibold"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              Keyboard Shortcuts
+            </h2>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={onClose}
-            className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg transition-colors"
+            style={{
+              backgroundColor: 'var(--bg-tertiary)',
+              color: 'var(--text-tertiary)',
+            }}
           >
             <FaTimes className="w-4 h-4" />
-          </motion.button>
+          </button>
         </div>
 
-        {/* Shortcuts list */}
-        <div className="p-4 space-y-3">
+        <div className="p-4 space-y-2">
           {shortcuts.map((shortcut, index) => (
-            <motion.div
+            <div
               key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="flex items-center justify-between py-2"
+              className="flex items-center justify-between py-2 px-3 rounded-lg"
+              style={{ backgroundColor: 'var(--bg-tertiary)' }}
             >
-              <span className="text-sm text-gray-300">{shortcut.description}</span>
+              <span 
+                className="text-sm"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                {shortcut.description}
+              </span>
               <div className="flex items-center gap-1">
                 {shortcut.keys.map((key, i) => (
                   <React.Fragment key={i}>
-                    <kbd className="px-2 py-1 bg-gray-700/80 rounded-md text-xs font-medium text-gray-300 border border-gray-600/50">
+                    <kbd 
+                      className="px-2 py-1 rounded text-xs font-medium border"
+                      style={{
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderColor: 'var(--border-primary)',
+                        color: 'var(--text-secondary)',
+                      }}
+                    >
                       {key}
                     </kbd>
                     {i < shortcut.keys.length - 1 && (
-                      <span className="text-gray-500 text-xs">+</span>
+                      <span style={{ color: 'var(--text-muted)' }}>+</span>
                     )}
                   </React.Fragment>
                 ))}
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-700/50 bg-gray-900/50">
-          <p className="text-xs text-gray-500 text-center">
-            Press <kbd className="px-1.5 py-0.5 bg-gray-700 rounded text-gray-400">Esc</kbd> to close
+        <div 
+          className="p-4 border-t"
+          style={{
+            borderColor: 'var(--border-primary)',
+            backgroundColor: 'var(--bg-secondary)',
+          }}
+        >
+          <p 
+            className="text-xs text-center"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Press <kbd 
+              className="px-1.5 py-0.5 rounded"
+              style={{
+                backgroundColor: 'var(--bg-tertiary)',
+                color: 'var(--text-tertiary)',
+              }}
+            >Esc</kbd> to close
           </p>
         </div>
       </motion.div>
     </motion.div>
   );
-};
+});
+
+ShortcutsModal.displayName = "ShortcutsModal";
+Header.displayName = "Header";
+
+export default Header;
