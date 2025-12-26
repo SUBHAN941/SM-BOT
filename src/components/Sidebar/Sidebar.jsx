@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FaPlus, 
@@ -13,43 +13,40 @@ import { HiSparkles } from "react-icons/hi2";
 import { useChatContext } from "../../context/ChatContext";
 import { ConversationItem } from "./ConversationItem";
 
-export const Sidebar = () => {
+export const Sidebar = memo(() => {
   const { 
     sidebarOpen, 
     setSidebarOpen,
     conversations, 
-    conversationId,  // Current conversation ID from useChat
-    newChat,         // Function to start new chat
-    loadConversation, // Function to load a conversation
-    deleteConversation
+    conversationId,
+    newChat,
+    loadConversation,
+    deleteConversation,
+    setSettingsOpen,
+    darkMode
   } = useChatContext();
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter conversations based on search
   const filteredConversations = (conversations || []).filter((conv) =>
     (conv.title || "New Conversation").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handle new chat
-  const handleNewChat = () => {
-    console.log("Creating new chat...");
+  const handleNewChat = useCallback(() => {
     newChat();
-  };
+  }, [newChat]);
 
-  // Handle select conversation
-  const handleSelectConversation = (id) => {
-    console.log("Selecting conversation:", id);
-    if (loadConversation) {
-      loadConversation(id);
-    }
-  };
+  const handleSelectConversation = useCallback((id) => {
+    loadConversation?.(id);
+  }, [loadConversation]);
 
-  // Handle delete conversation
-  const handleDeleteConversation = (id) => {
-    console.log("Deleting conversation:", id);
+  const handleDeleteConversation = useCallback((id) => {
     deleteConversation(id);
-  };
+  }, [deleteConversation]);
+
+  const handleOpenSettings = useCallback(() => {
+    setSettingsOpen(true);
+  }, [setSettingsOpen]);
 
   return (
     <AnimatePresence>
@@ -61,22 +58,39 @@ export const Sidebar = () => {
           transition={{ duration: 0.3 }}
           className="relative flex-shrink-0 h-full z-40 lg:relative fixed left-0 top-0"
         >
-          <div className="h-full w-[280px] bg-gray-900 border-r border-gray-800 flex flex-col">
-            
+          <div 
+            className="h-full w-[280px] flex flex-col border-r transition-colors duration-300"
+            style={{
+              backgroundColor: 'var(--bg-secondary)',
+              borderColor: 'var(--border-primary)',
+            }}
+          >
             {/* Header */}
-            <div className="p-4 border-b border-gray-800">
-              {/* Title row */}
+            <div 
+              className="p-4 border-b"
+              style={{ borderColor: 'var(--border-primary)' }}
+            >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
                     <HiSparkles className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm font-semibold text-white">Chats</span>
+                  <span 
+                    className="text-sm font-semibold"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    Chats
+                  </span>
                 </div>
                 
                 <button
                   onClick={() => setSidebarOpen(false)}
-                  className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors lg:hidden"
+                  className="p-2 rounded-lg transition-colors lg:hidden"
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
+                    color: 'var(--text-tertiary)',
+                  }}
+                  aria-label="Close sidebar"
                 >
                   <FaChevronLeft className="w-4 h-4" />
                 </button>
@@ -91,20 +105,31 @@ export const Sidebar = () => {
                 <span>New Chat</span>
               </button>
 
-              {/* Search Bar */}
+              {/* Search */}
               <div className="relative mt-4">
-                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <FaSearch 
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                  style={{ color: 'var(--text-muted)' }}
+                />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search conversations..."
-                  className="w-full pl-10 pr-10 py-2.5 bg-gray-800 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-colors"
+                  style={{
+                    backgroundColor: 'var(--bg-input)',
+                    borderColor: 'var(--border-primary)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-primary)',
+                  }}
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-gray-700 text-gray-500 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded transition-colors"
+                    style={{ color: 'var(--text-muted)' }}
+                    aria-label="Clear search"
                   >
                     <FaTimes className="w-3 h-3" />
                   </button>
@@ -113,9 +138,12 @@ export const Sidebar = () => {
             </div>
 
             {/* Conversations List */}
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+            <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
               {filteredConversations.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-40 text-gray-500">
+                <div 
+                  className="flex flex-col items-center justify-center h-40"
+                  style={{ color: 'var(--text-muted)' }}
+                >
                   <FaHistory className="w-8 h-8 mb-2 opacity-50" />
                   <p className="text-sm">
                     {searchQuery ? "No matching chats" : "No conversations yet"}
@@ -132,18 +160,28 @@ export const Sidebar = () => {
                     isActive={conversationId === conversation.id}
                     onClick={() => handleSelectConversation(conversation.id)}
                     onDelete={() => handleDeleteConversation(conversation.id)}
+                    darkMode={darkMode}
                   />
                 ))
               )}
             </div>
 
             {/* Footer */}
-            <div className="p-3 border-t border-gray-800 space-y-1">
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-colors">
+            <div 
+              className="p-3 border-t space-y-1"
+              style={{ borderColor: 'var(--border-primary)' }}
+            >
+              <button 
+                onClick={handleOpenSettings}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors"
+                style={{ color: 'var(--text-tertiary)' }}
+              >
                 <FaCog className="w-4 h-4" />
                 <span className="text-sm">Settings</span>
               </button>
-              <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors">
+              <button 
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors"
+              >
                 <FaSignOutAlt className="w-4 h-4" />
                 <span className="text-sm">Sign Out</span>
               </button>
@@ -153,4 +191,8 @@ export const Sidebar = () => {
       )}
     </AnimatePresence>
   );
-};
+});
+
+Sidebar.displayName = "Sidebar";
+
+export default Sidebar;
